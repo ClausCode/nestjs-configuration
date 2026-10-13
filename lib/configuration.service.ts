@@ -1,5 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common"
-import type { ConfigService, Path, PathValue } from "@nestjs/config"
+import type { Path, PathValue } from "@nestjs/config"
+// biome-ignore lint/style/useImportType: <>
+import { ConfigService } from "@nestjs/config"
 import type { z } from "zod"
 
 import { CONFIGURATION_OPTIONS } from "./constants"
