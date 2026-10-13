@@ -1,6 +1,6 @@
 {
 	"name": "@clauscode/nestjs-configuration",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "A lightweight library for validating and type-safe dotenv configuration.",
 	"type": "commonjs",
 	"author": {
