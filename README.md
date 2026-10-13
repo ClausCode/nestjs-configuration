@@ -32,7 +32,7 @@ npm install @nestjs/common @nestjs/core @nestjs/config zod
 
 ## 🚀 Quick start
 
-### 1. Define your configuration schema
+### 1. Define your configuration
 
 Create a configuration file, for example `app.configuration.ts`:
 
@@ -40,21 +40,23 @@ Create a configuration file, for example `app.configuration.ts`:
 import { defineConfiguration } from "@clauscode/nestjs-configuration"
 import { z } from "zod"
 
-export const appConfiguration = defineConfiguration({
-  schema: z.object({
-    app: z.object({
-      name: z.string().default("my-app"),
-      port: z.coerce.number().int().positive().default(3000),
-    }),
-
-    database: z.object({
-      url: z.string().url(),
-    }),
-
-    debug: z.stringbool().default(false),
+export const schema = z.object({
+  app: z.object({
+    name: z.string().default("my-app"),
+    port: z.coerce.number().int().positive().default(3000),
   }),
 
-  transform: (env) => ({
+  database: z.object({
+    url: z.url(),
+  }),
+
+  debug: z.stringbool().default(false),
+})
+
+export const appConfiguration = defineConfiguration({
+  schema,
+
+  transform: env => ({
     app: {
       name: env.APP_NAME,
       port: env.APP_PORT,
@@ -69,9 +71,11 @@ export const appConfiguration = defineConfiguration({
 })
 ```
 
-The schema defines the expected configuration shape, while `transform` maps environment variables to that shape.
+The `schema` defines the expected configuration structure and validation rules. The `transform` function maps environment variables to the corresponding fields.
 
-For example, the environment might contain:
+Exporting `schema` separately also lets you reuse its inferred types throughout your application without defining a separate TypeScript interface.
+
+For example, your environment might contain:
 
 ```dotenv
 APP_NAME=my-api
@@ -80,9 +84,73 @@ DATABASE_URL=postgresql://localhost:5432/mydb
 DEBUG=false
 ```
 
-Zod validates the resulting values and applies defaults when optional values are missing.
+Zod validates the transformed values and applies defaults when values are missing.
 
 > **Tip:** Use `z.stringbool()` for boolean environment variables. Environment variables are strings, so `Boolean("false")` would unexpectedly return `true`.
+
+### 2. Register the configuration module
+
+Register your configuration in your application's root module:
+
+```ts
+import { ConfigurationModule } from "@clauscode/nestjs-configuration"
+import { Module } from "@nestjs/common"
+
+import { appConfiguration } from "./app.configuration"
+
+@Module({
+  imports: [ConfigurationModule.register(appConfiguration)],
+})
+export class AppModule {}
+```
+
+### 3. Use your configuration
+
+Choose one of the following approaches to get TypeScript autocomplete and type checking.
+
+#### Option 1: Use `typeof schema`
+
+Pass the schema type when retrieving `ConfigurationService`:
+
+```ts
+import { ConfigurationService } from "@clauscode/nestjs-configuration"
+import { NestFactory } from "@nestjs/core"
+
+import { AppModule } from "./app.module"
+import { schema } from "./app.configuration"
+
+const app = await NestFactory.create(AppModule)
+
+const config = app.get<ConfigurationService<typeof schema>>(
+  ConfigurationService,
+)
+
+config.get("app.name")     // string
+config.get("app.port")     // number
+config.get("database.url") // string
+
+config.get("database.unknown") // TypeScript error
+```
+
+TypeScript infers the configuration types directly from your Zod schema. No separate interfaces or manually declared property types are needed.
+
+#### Option 2: Create a typed service once
+
+If you don't want to specify `typeof schema` every time, create a service for your application.
+
+**1. Create `app-configuration.service.ts`:**
+
+```ts
+import { Injectable } from "@nestjs/common"
+import { ConfigurationService } from "@clauscode/nestjs-configuration"
+
+import { schema } from "./app.configuration"
+
+@Injectable()
+export class AppConfigurationService extends ConfigurationService<
+  typeof schema
+> {}
+```
 
 ### 2. Register the configuration module
 
@@ -101,32 +169,94 @@ import { appConfiguration } from "./app.configuration"
 export class AppModule {}
 ```
 
-### 3. Inject and use the configuration
+### 3. Use your configuration
 
-Inject `ConfigurationService` wherever configuration is needed:
+Choose one of the following approaches to get TypeScript autocomplete and type checking.
+
+#### Option 1: Use `typeof schema`
+
+The simplest approach is to pass your schema type when retrieving the service:
+
+```ts
+import { ConfigurationService } from "@clauscode/nestjs-configuration"
+import { NestFactory } from "@nestjs/core"
+
+import { AppModule } from "./app.module"
+import { schema } from "./app.configuration"
+
+const app = await NestFactory.create(AppModule)
+
+const config = app.get<ConfigurationService<typeof schema>>(
+  ConfigurationService,
+)
+
+config.get("app.name")     // string
+config.get("app.port")     // number
+config.get("database.url") // string
+
+config.get("database.unknown") // TypeScript error
+```
+
+**Why use `typeof schema`?**
+
+It tells TypeScript to get the configuration types directly from your Zod schema. You don't need to create a separate interface or define the types manually.
+
+#### Option 2: Create a typed service once
+
+If you don't want to write `typeof schema` every time, create a custom service for your application.
+
+**1. Create `app-configuration.service.ts`:**
 
 ```ts
 import { Injectable } from "@nestjs/common"
 import { ConfigurationService } from "@clauscode/nestjs-configuration"
 
+import { schema } from "./app.configuration"
+
+@Injectable()
+export class AppConfigurationService extends ConfigurationService<
+  typeof schema
+> {}
+```
+
+**2. Register the service in your `AppModule`:**
+
+```ts
+providers: [
+  {
+    provide: AppConfigurationService,
+    useExisting: ConfigurationService,
+  },
+],
+exports: [AppConfigurationService],
+```
+
+Keep `ConfigurationModule.register(appConfiguration)` in the module's `imports`, as shown in the previous step.
+
+**3. Inject your custom service wherever you need it:**
+
+```ts
+import { Injectable } from "@nestjs/common"
+import { AppConfigurationService } from "./app-configuration.service"
+
 @Injectable()
 export class AppService {
   constructor(
-    private readonly config: ConfigurationService,
+    private readonly config: AppConfigurationService,
   ) {}
 
-  getAppInfo() {
-    return {
-      name: this.config.get("app.name"),
-      port: this.config.get("app.port"),
-      databaseUrl: this.config.get("database.url"),
-      debug: this.config.get("debug"),
-    }
+  getPort() {
+    return this.config.get("app.port") // number
   }
 }
 ```
 
-TypeScript can infer the types associated with the schema, giving you autocomplete and compile-time checks for supported configuration paths.
+That's it! You define the schema type once, and TypeScript autocomplete works wherever you inject `AppConfigurationService`.
+
+**Which option should you choose?**
+
+- **Option 1:** Best if you only need typed access in a few places.
+- **Option 2:** Best if you want to inject the configuration throughout your application without repeating `typeof schema`.
 
 ## 🛡️ Validation and defaults
 
