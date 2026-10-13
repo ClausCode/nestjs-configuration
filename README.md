@@ -27,7 +27,7 @@ npm install @clauscode/nestjs-configuration
 The package requires NestJS, `@nestjs/config`, and Zod. Compatible peer dependencies may be installed automatically by npm. If your project does not already have them, install the required packages explicitly:
 
 ```bash
-npm install @nestjs/common @nestjs/core @nestjs/config rxjs zod
+npm install @nestjs/common @nestjs/core @nestjs/config zod
 ```
 
 ## 🚀 Quick start

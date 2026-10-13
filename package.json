@@ -34,7 +34,6 @@
 		"@nestjs/core": "^10.0.0",
 		"@nestjs/testing": "^10.0.0",
 		"reflect-metadata": "^0.2.2",
-		"rxjs": "^7.8.0",
 		"typescript": "^5.8.0",
 		"vitest": "^5.0.4",
 		"zod": "^4.6.7"
@@ -44,7 +43,6 @@
 		"@nestjs/core": "^10.0.0 || ^11.0.0",
 		"@nestjs/config": "^4.0.0",
 		"reflect-metadata": "^0.1.13 || ^0.2.0",
-		"rxjs": "^7.1.0",
 		"zod": "^4.0.0"
 	}
 }
