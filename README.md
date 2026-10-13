@@ -6,7 +6,7 @@ Validate environment variables at startup, transform raw strings into correctly 
 
 [![npm version](https://img.shields.io/npm/v/%40clauscode%2Fnestjs-configuration)](https://www.npmjs.com/package/@clauscode/nestjs-configuration)
 [![npm downloads](https://img.shields.io/npm/dm/%40clauscode%2Fnestjs-configuration)](https://www.npmjs.com/package/@clauscode/nestjs-configuration)
-[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ## ✨ Features
 
