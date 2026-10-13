@@ -4,6 +4,7 @@ import { z } from "zod"
 
 import { ConfigurationModule } from "../lib/configuration.module"
 import { ConfigurationService } from "../lib/configuration.service"
+import { ConfigurationValidationError } from "../lib/utils"
 
 const testSchema = z.object({
 	app: z.object({
@@ -11,7 +12,7 @@ const testSchema = z.object({
 		port: z.coerce.number().int().positive().default(3000),
 	}),
 	database: z.object({
-		url: z.string().url(),
+		url: z.url(),
 	}),
 	debug: z.stringbool().default(false),
 })
@@ -145,7 +146,9 @@ describe("ConfigurationModule", () => {
 	it("should reject an invalid database URL", async () => {
 		process.env.DATABASE_URL = "not-a-url"
 
-		await expect(createTestModule()).rejects.toThrow()
+		await expect(createTestModule()).rejects.toThrow(
+			ConfigurationValidationError,
+		)
 	})
 
 	it("should reject a missing required database URL", async () => {

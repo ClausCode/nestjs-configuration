@@ -1,5 +1,7 @@
 import { registerAs } from "@nestjs/config"
-import { z } from "zod"
+import type { z } from "zod"
+
+import { validateSchema } from "./validate-schema.util"
 
 type AnyZodObject = z.ZodObject<z.ZodRawShape>
 type Env = Record<string, string | undefined>
@@ -10,22 +12,15 @@ export function createConfigFactories<T extends AnyZodObject>(
 ) {
 	const keys = Object.keys(schema.shape) as (keyof T["shape"] & string)[]
 
-	let transformed: z.input<T> | undefined
+	let validated: z.output<T> | undefined
 
-	const getTransformed = (): z.input<T> => {
-		if (transformed === undefined) {
-			transformed = transform(process.env)
+	const getValidated = (): z.output<T> => {
+		if (validated === undefined) {
+			validated = validateSchema(schema, transform(process.env))
 		}
 
-		return transformed
+		return validated
 	}
 
-	return keys.map(key => {
-		const sectionSchema = schema.shape[key]
-
-		return registerAs(key, () => {
-			const config = getTransformed() as Record<string, unknown>
-			return z.parse(sectionSchema, config[key])
-		})
-	})
+	return keys.map(key => registerAs(key, () => getValidated()[key]))
 }
