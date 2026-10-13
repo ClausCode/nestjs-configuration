@@ -229,7 +229,7 @@ This separates environment-specific details from the rest of your application an
 Clone the repository and install dependencies:
 
 ```bash
-git clone https://github.com/ClausCode/nestjs-configuration.git
+git clone git@gitlab.com:ClausCode/nestjs-configuration.git
 cd nestjs-configuration
 npm install
 ```
