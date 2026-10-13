@@ -1,0 +1,38 @@
+{
+	"name": "@clauscode/nestjs-configuration",
+	"version": "0.0.1",
+	"description": "A lightweight library for validating and type-safe dotenv configuration.",
+	"type": "commonjs",
+
+	"author": {
+		"name": "Николай Матвеев",
+		"email": "claus-code@yandex.com"
+	},
+	"license": "ISC",
+
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"files": [
+		"dist"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+
+	"scripts": {
+		"build": "tsc -p tsconfig.build.json",
+		"format": "biome format --write .",
+		"lint": "biome lint .",
+		"check": "biome check .",
+		"check:write": "biome check --write .",
+		"check:ci": "biome ci ."
+	},
+
+	"devDependencies": {
+		"@biomejs/biome": "^2.5.15",
+		"@types/bun": "1.4.3"
+	},
+	"peerDependencies": {
+		"typescript": "^7"
+	}
+}
